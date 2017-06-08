@@ -5,6 +5,9 @@
  */
 package cmms.models;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  *
  * @author gpatitakis
@@ -16,14 +19,16 @@ public class Pareto {
     // ------------------------
     private String label;
 
-    private Long damages;
+    private Double delay;
+
+    private Double percent;
 
     // ------------------------
     // PUBLIC METHODS
     // ------------------------
-    public Pareto(String label, Long damages) {
+    public Pareto(String label, Long delay) {
         this.label = label;
-        this.damages = damages / 60;
+        this.delay = new BigDecimal(delay / 3600.00).setScale(2, RoundingMode.CEILING).doubleValue();
     }
 
     // Getter and setter methods
@@ -35,18 +40,27 @@ public class Pareto {
         this.label = label;
     }
 
-    public Long getDamages() {
-        return damages;
+    public Double getDelay() {
+        return delay;
     }
 
-    public void setDamages(Long damages) {
-        this.damages = damages;
+    public void setDelay(Double delay) {
+        this.delay = delay;
+    }
+
+    public Double getPercent() {
+        return percent;
+    }
+
+    public void setPercent(Double percent) {
+        this.percent = percent;
     }
 
     @Override
     public String toString() {
         return "Pareto{"
                 + "label=" + label
-                + ", damages=" + damages + '}';
+                + ", delay=" + delay
+                + ", percent=" + percent + '}';
     }
 } // class Pareto

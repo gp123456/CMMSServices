@@ -32,6 +32,24 @@ public interface DamageDao extends JpaRepository<Damage, Long>, JpaSpecification
     public List findByCreatedBetweenAndDepartmentInAndDeletedOrderByCreatedDesc(Date from, Date to, List department, Boolean deleted) throws Exception;
 
     /**
+     * Return the damages having the passed department and type.
+     *
+     * @param from
+     * @param to
+     * @param department the department of plant.
+     * @param type the type of damage
+     * @param deleted the delete parameter is false
+     * @return the db damages info or null of specific department
+     * @throws java.lang.Exception
+     */
+    public List findByCreatedBetweenAndDepartmentInAndTypeAndDeletedOrderByCreatedDesc(
+            Date from,
+            Date to,
+            List department,
+            Long type,
+            Boolean deleted) throws Exception;
+
+    /**
      * Return the damages having the passed criteria.
      *
      * @param criteria
@@ -86,7 +104,7 @@ public interface DamageDao extends JpaRepository<Damage, Long>, JpaSpecification
     public Long countByDepartmentAndDeleted(Long department, Boolean deleted) throws Exception;
 
     /**
-     * Return the sum duration by following filter.
+     * Return the sum duration by filter and group by cause.
      *
      * @param department the department of plant.
      * @param start the start date of shift.
@@ -96,13 +114,29 @@ public interface DamageDao extends JpaRepository<Damage, Long>, JpaSpecification
      */
     @Query("SELECT d.cause, SUM(d.duration) FROM Damage d WHERE d.deleted = 0 AND d.department in :department AND d.type != 3 AND d.created BETWEEN "
             + ":start AND :end GROUP BY d.cause")
-    public List<Object[]> sumDurationByDepartmentInShift(
+    public List<Object[]> sumDurationByDepartmentInShiftCause(
             @Param("department") List department,
             @Param("start") Date start,
             @Param("end") Date end) throws Exception;
 
     /**
-     * Return the sum duration by following filter.
+     * Return the sum duration by filter.
+     *
+     * @param department the department of plant.
+     * @param start the start date of shift.
+     * @param end the end date of shift.
+     * @return the sum duration of damages in specific machine
+     * @throws java.lang.Exception
+     */
+    @Query("SELECT SUM(d.duration) FROM Damage d WHERE d.deleted = 0 AND d.department in :department AND d.type != 3 AND d.created BETWEEN "
+            + ":start AND :end")
+    public Long sumDurationByDepartmentInShift(
+            @Param("department") List department,
+            @Param("start") Date start,
+            @Param("end") Date end) throws Exception;
+
+    /**
+     * Return the sum duration by filter and group by cause.
      *
      * @param machine the machine of specific department of plant.
      * @param start the start date of shift.
@@ -112,7 +146,22 @@ public interface DamageDao extends JpaRepository<Damage, Long>, JpaSpecification
      */
     @Query("SELECT d.cause, SUM(d.duration) FROM Damage d WHERE d.deleted = 0 AND d.machine = :machine AND d.type != 3 AND d.created BETWEEN :start "
             + "AND :end GROUP BY d.cause")
-    public List<Object[]> sumDurationByMachineShift(
+    public List<Object[]> sumDurationByMachineShiftCause(
+            @Param("machine") Long machine,
+            @Param("start") Date start,
+            @Param("end") Date end) throws Exception;
+
+    /**
+     * Return the sum duration by filter.
+     *
+     * @param machine the machine of specific department of plant.
+     * @param start the start date of shift.
+     * @param end the end date of shift.
+     * @return the sum duration of damages in specific machine
+     * @throws java.lang.Exception
+     */
+    @Query("SELECT SUM(d.duration) FROM Damage d WHERE d.deleted = 0 AND d.machine = :machine AND d.type != 3 AND d.created BETWEEN :start AND :end")
+    public Long sumDurationByMachineShift(
             @Param("machine") Long machine,
             @Param("start") Date start,
             @Param("end") Date end) throws Exception;
