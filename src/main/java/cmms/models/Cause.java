@@ -50,6 +50,15 @@ public class Cause implements Serializable {
         this.id = id;
     }
 
+    public Cause(Long id, Long type, Long department, Boolean enable, String code, String description) {
+        this.id = id;
+        this.type = type;
+        this.department = department;
+        this.enable = enable;
+        this.code = code;
+        this.description = description;
+    }
+
     public Cause(Long type, Long department, Boolean enable, String code, String description) {
         this.type = type;
         this.department = department;

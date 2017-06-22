@@ -28,7 +28,7 @@ public class DamageSpecs /*implements Specification<Damage>*/ {
             return (Root<Damage> root, CriteriaQuery<?> query, CriteriaBuilder builder)
                     -> builder.between(root.get(Damage_.created), from, to);
         }
-        
+
         return null;
     }
 
@@ -39,6 +39,11 @@ public class DamageSpecs /*implements Specification<Damage>*/ {
         }
 
         return null;
+    }
+
+    public static Specification<Damage> groupBy() {
+        return (Root<Damage> root, CriteriaQuery<?> query, CriteriaBuilder builder)
+                -> query.groupBy(root.get(Damage_.machine)).getGroupRestriction();
     }
 
     public static Specification<Damage> types(Long[] types) {
@@ -78,9 +83,9 @@ public class DamageSpecs /*implements Specification<Damage>*/ {
 
         return null;
     }
-    
+
     public static Specification<Damage> deleted() {
         return (Root<Damage> root, CriteriaQuery<?> query, CriteriaBuilder builder)
-                    -> builder.equal(root.get(Damage_.deleted), Boolean.FALSE);
+                -> builder.equal(root.get(Damage_.deleted), Boolean.FALSE);
     }
 }

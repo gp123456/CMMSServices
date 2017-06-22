@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -72,7 +73,7 @@ public class UserController {
 
                             if (dbuser != null) {
                                 Long[] departments = user.getDepartments();
-                                
+
                                 if (departments != null && departments.length > 0) {
                                     for (Long department : departments) {
                                         userDepartmentDao.save(new UserDepartment(user.getId(), department));
@@ -151,7 +152,7 @@ public class UserController {
                     response = mapper.writeValueAsString(user);
 
                 } else {
-                    response = "No login user with username:" + username + " and password:" + password;
+                    response = "Αποτυχημένη σύνδεση με όνομα χρήστη:" + username;
                 }
             }
         } catch (Exception ex) {
@@ -192,6 +193,37 @@ public class UserController {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
             response = "User not found with error:" + ex.getMessage();
+        }
+
+        return response;
+    }
+
+    /**
+     * /get-by-types --> Return the users having the passed types.
+     *
+     * @param ids the types of user
+     * @return the db user info for specific type or error message.
+     */
+    @RequestMapping("/user/types")
+    @ResponseBody
+    public String type(Integer[] ids) {
+        logger.log(Level.INFO, "Get users with type ids:{0}", Arrays.toString(ids));
+
+        String response = null;
+
+        try {
+            if (ids != null && ids.length > 0) {
+                ObjectMapper mapper = new ObjectMapper();
+                List users = userDao.findByTypeInOrderByNameAsc(ids);
+                ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, User.class));
+
+                if (users != null && !users.isEmpty()) {
+                    response = typedWriter.writeValueAsString(users);
+
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
         }
 
         return response;

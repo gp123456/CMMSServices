@@ -151,7 +151,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
@@ -210,7 +210,7 @@ public class CauseController {
                             departments.add(ud.getDepartment());
                         });
                         Collection<Cause> causes;
-                        
+
                         if (user.getType().equals(UserTypeEnum.ELECTRICIAN.getId())) {
                             causes = causeDao.findByTypeAndDepartmentInAndEnableOrderByDescriptionAsc(CauseTypeEnum.ELECRTICAL.getId(), departments, true);
                         } else if (user.getType().equals(UserTypeEnum.ENGINEER.getId())) {
@@ -249,23 +249,23 @@ public class CauseController {
                 List<Long> departmentIds = new ArrayList<>();
                 List<Cause> causes = new ArrayList<>();
 
+                for (String department : departments) {
+                    departmentIds.add(Long.parseLong(department));
+                }
                 for (String type : types) {
                     Long _type = Long.parseLong(type);
 
                     if (_type.equals(CauseTypeEnum.DELAY.getId())) {
-                        Collection<Delay> delays = delayDao.findAll(new Sort(Sort.Direction.ASC, "description"));
+                        Collection<Delay> delays = delayDao.findByDepartmentInOrderByDescriptionAsc(departmentIds);
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
                         typeIds.add(_type);
                     }
-                }
-                for (String department : departments) {
-                    departmentIds.add(Long.parseLong(department));
                 }
                 List<Cause> _causes = causeDao.findByTypeInAndDepartmentInAndEnableOrderByDescriptionAsc(typeIds, departmentIds, true);
                 if (_causes != null && !_causes.isEmpty()) {
@@ -289,7 +289,7 @@ public class CauseController {
     @RequestMapping("/cause/type-user")
     @ResponseBody
     public String type_user(@RequestParam("type") Long type, @RequestParam("user") String user) {
-        logger.log(Level.INFO, "Get list causes by type id:{0} and user id{1}", new Object[]{type, user});
+        logger.log(Level.INFO, "Get list causes by type id:{0} and user id:{1}", new Object[]{type, user});
 
         String response = null;
 
@@ -497,7 +497,7 @@ public class CauseController {
             RefCause refCause = mapper.readValue(jsonRefCause, RefCause.class);
 
             if (refCause != null) {
-                subcauseDao.saveAndFlush(new Subcause(refCause.getCauseId(), Boolean.TRUE, null, refCause.getSubcause()));
+                subcauseDao.saveAndFlush(new Subcause(refCause.getCauseId() - OFFSET_CAUSE_ID, Boolean.TRUE, null, refCause.getSubcause()));
             }
         }
         List<RefCause> values = null;

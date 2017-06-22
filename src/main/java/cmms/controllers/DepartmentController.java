@@ -136,6 +136,37 @@ public class DepartmentController {
         return response;
     }
 
+    /**
+     * one --> Return the departments by machine id of db in JSON format.
+     *
+     * @param id the machine id
+     * @return the db department info or error message.
+     */
+    @RequestMapping("/department")
+    @ResponseBody
+    public String department(Long id) {
+        logger.log(Level.INFO, "Get department with id:{0}", id);
+
+        String response = null;
+
+        try {
+            if (id != null) {
+                ObjectMapper mapper = new ObjectMapper();
+                Department d = departmentDao.findOne(id);
+
+                if (d != null) {
+                    response = mapper.writeValueAsString(d);
+                } else {
+                    response = "There weren't department with id:" + id;
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+        }
+
+        return response;
+    }
+
     // ------------------------
     // PRIVATE FIELDS
     // ------------------------

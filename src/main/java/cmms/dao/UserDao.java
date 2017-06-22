@@ -23,7 +23,16 @@ public interface UserDao extends JpaRepository<User, String> {
      * @throws java.lang.Exception
      */
     public List findByTypeOrderByNameAsc(Integer type) throws Exception;
-    
+
+    /**
+     * Return the users having the passed types or null if no user is found.
+     *
+     * @param type the types of user.
+     * @return the db user info or null
+     * @throws java.lang.Exception
+     */
+    public List findByTypeInOrderByNameAsc(Integer[] type) throws Exception;
+
     /**
      * Return the users having the passed type or null if no user is found.
      *

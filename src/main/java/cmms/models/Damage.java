@@ -1,10 +1,12 @@
 package cmms.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import cmms.helpers.CustomDateDeserializer;
+import cmms.helpers.CustomDateSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,9 +34,10 @@ public class Damage implements Serializable {
     @Column(name = "Q32UKID")
     private Long id;
 
+    @JsonSerialize(using = CustomDateSerializer.class)
+    @JsonDeserialize(using = CustomDateDeserializer.class)
     @NotNull
     @Column(name = "Q32TRDJ")
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     private Date created;
 
     @Column(name = "Q32USER")
@@ -116,6 +119,10 @@ public class Damage implements Serializable {
     @Transient
     private String descriptionSubcause;
 
+    private Damage(Builder builder) {
+        this.machine = builder.machine;
+    }
+
     // ------------------------
     // PUBLIC METHODS
     // ------------------------
@@ -135,12 +142,10 @@ public class Damage implements Serializable {
         this.id = id;
     }
 
-    @JsonFormat(pattern = "YYYY-MM-dd HH:mm:ss")
     public Date getCreated() {
         return created;
     }
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -402,5 +407,20 @@ public class Damage implements Serializable {
                 + ",duration=" + duration
                 + ",user=" + user
                 + ",note=" + note + '}';
+    }
+
+    public static class Builder {
+
+        private Long machine;
+
+        public Builder setMachine(Long machine) {
+            this.machine = machine;
+
+            return this;
+        }
+
+        public Damage build() {
+            return new Damage(this);
+        }
     }
 } // class Damage

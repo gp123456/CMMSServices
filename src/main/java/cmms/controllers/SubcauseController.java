@@ -8,8 +8,6 @@ package cmms.controllers;
 import cmms.dao.CauseDao;
 import cmms.dao.DamageDao;
 import cmms.dao.SubcauseDao;
-import cmms.models.Cause;
-import cmms.models.Damage;
 import cmms.models.Subcause;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -72,9 +70,9 @@ public class SubcauseController {
      * @param id the id(s) of cause
      * @return the list db causes info or error message.
      */
-    @RequestMapping("/subcause/cause")
+    @RequestMapping("/subcause/causes")
     @ResponseBody
-    public String cause(String[] id) {
+    public String causes(String[] id) {
         logger.log(Level.INFO, "Get list subcauses by cause id:{0}", Arrays.toString(id));
 
         String response = null;
@@ -99,11 +97,11 @@ public class SubcauseController {
 
                 response = (subcauses != null && !subcauses.isEmpty())
                         ? typedWriter.writeValueAsString(subcauses)
-                        : "There weren't causes for department id:" + Arrays.toString(id);
+                        : "There weren't subcauses for cause id:" + Arrays.toString(id);
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
-            response = "Search for all causes in db with error:" + ex.getMessage();
+            response = "Search for all subcauses in db with error:" + ex.getMessage();
         }
 
         return response;

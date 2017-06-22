@@ -19,8 +19,6 @@ import java.util.logging.Logger;
 public class Shift {
 
     static public long SHIFT_DURATION_MSEC = 8 * 3600 * 1000;
-    
-    static public long SHIFT_DURATION_MIN = 8 * 60;
 
     static public String getStart(final Date current) {
         String start;
@@ -36,7 +34,7 @@ public class Shift {
             start = sdf.format(new Date(morning));
         } else if (evening <= currentTime && currentTime <= nighting) {
             start = sdf.format(new Date(evening));
-        } else if (current.getHours() <= 24) {
+        } else if (nighting <= currentTime) {
             start = sdf.format(new Date(nighting));
         } else {
             start = sdf.format(new Date(prevDate));

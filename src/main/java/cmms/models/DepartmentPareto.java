@@ -15,21 +15,24 @@ import java.util.List;
 public class DepartmentPareto {
 
     private Long id;
-    
+
     private String department;
 
     private List<Pareto> paretos;
-    
+
     private BigDecimal mttr;
-    
+
     private BigDecimal mtbf;
 
-    public DepartmentPareto(Long id, String department, List paretos, BigDecimal mttr, BigDecimal mtbf) {
+    private String machineCodes;
+
+    public DepartmentPareto(Long id, String department, List paretos, BigDecimal mttr, BigDecimal mtbf, String machineCodes) {
         this.id = id;
         this.department = department;
         this.paretos = paretos;
         this.mttr = mttr;
         this.mtbf = mtbf;
+        this.machineCodes = machineCodes;
     }
 
     public Long getId() {
@@ -70,5 +73,13 @@ public class DepartmentPareto {
 
     public void setMtbf(BigDecimal mtbf) {
         this.mtbf = mtbf;
+    }
+
+    public String getMachineCodes() {
+        return machineCodes;
+    }
+
+    public void setMachineCodes(String machineCodes) {
+        this.machineCodes = machineCodes;
     }
 }

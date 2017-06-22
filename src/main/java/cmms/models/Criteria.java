@@ -5,7 +5,10 @@
  */
 package cmms.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import cmms.helpers.CustomDateDeserializer;
+import cmms.helpers.CustomDateSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,10 +22,12 @@ public class Criteria implements Serializable {
     // ------------------------
     // PRIVATE FIELDS
     // ------------------------
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonSerialize(using = CustomDateSerializer.class)
+    @JsonDeserialize(using = CustomDateDeserializer.class)
     private Date from;
 
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonSerialize(using = CustomDateSerializer.class)
+    @JsonDeserialize(using = CustomDateDeserializer.class)
     private Date to;
 
     private Long[] departments;
@@ -110,14 +115,13 @@ public class Criteria implements Serializable {
 
     @Override
     public String toString() {
-        return
-                "from=" + from + "," +
-                "to=" + to + "," +
-                "departments=" + ((departments.length > 0) ? Arrays.toString(departments) : "") + "," +
-                "machines=" + ((machines.length > 0) ? Arrays.toString(machines) : "") + "," +
-                "types=" + ((types.length > 0) ? Arrays.toString(types) : "") + "," +
-                "causes=" + ((causes.length > 0) ? Arrays.toString(causes) : "") + "," +
-                "subcauses=" + ((subcauses.length > 0) ? Arrays.toString(subcauses) : "") + "," +
-                "users=" + ((users.length > 0) ? Arrays.toString(users) : "");
+        return "from=" + from + ","
+                + "to=" + to + ","
+                + "departments=" + ((departments.length > 0) ? Arrays.toString(departments) : "") + ","
+                + "machines=" + ((machines.length > 0) ? Arrays.toString(machines) : "") + ","
+                + "types=" + ((types.length > 0) ? Arrays.toString(types) : "") + ","
+                + "causes=" + ((causes.length > 0) ? Arrays.toString(causes) : "") + ","
+                + "subcauses=" + ((subcauses.length > 0) ? Arrays.toString(subcauses) : "") + ","
+                + "users=" + ((users.length > 0) ? Arrays.toString(users) : "");
     }
 } // class Criteria
