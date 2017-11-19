@@ -921,6 +921,7 @@ public class DamagesController {
                             if (damage.getDuration() != null) {
                                 d.setDuration(damage.getDuration() * 60);
                             }
+                            d.setQ32$STA("3");
 
                             d = damageDao.saveAndFlush(d);
 
@@ -1109,11 +1110,13 @@ public class DamagesController {
         User u = userDao.findOne(damage.getUser());
         String cause = getCauseDescription(damage.getType(), damage.getCause());
         String subcause = getSubcauseDescription(damage.getType(), damage.getCause());
-        double fDuration = damage.getDuration() / 60.;
+        //double fDuration = damage.getDuration() / 60.;
         Long lDuration = damage.getDuration() / 60;
-        double diff = fDuration - lDuration;
+        //double diff = fDuration - lDuration;
 
-        damage.setMinuteDuration(diff < 0.5 ? lDuration : lDuration + 1);
+        //damage.setMinuteDuration(diff < 0.5 ? lDuration : lDuration + 1);
+        damage.setMinuteDuration(lDuration);
+        damage.setSecondsDuration(damage.getDuration() % 60);
         damage.setDescriptionType((ct != null) ? ct.getViewName() : "");
         damage.setDescriptionDepartment((d != null) ? d.getDescription() : "");
         damage.setDescriptionMachine((m != null) ? m.getCode() : "");
@@ -1194,10 +1197,17 @@ public class DamagesController {
                         }
 
                         if (criteria.getCauses() != null && criteria.getSubcauses().length == 0) {
-                            List<Subcause> subcauses = subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(
+                            List<Subcause> subcauses = new ArrayList<>();
+
+                            for (Long cause : criteria.getCauses()) {
+                                if (cause.compareTo(10000l) > 0) {
+                                    subcauses.add(new Subcause(cause - 10000));
+                                }
+                            }
+                            subcauses.addAll(subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(
                                     Arrays.asList(criteria.getCauses()),
                                     Boolean.TRUE
-                            );
+                            ));
 
                             if (subcauses != null && !subcauses.isEmpty()) {
                                 causes = new Long[subcauses.size()];

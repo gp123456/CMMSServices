@@ -102,6 +102,9 @@ public class Damage implements Serializable {
     private Long minuteDuration;
 
     @Transient
+    private Long secondsDuration;
+
+    @Transient
     private String descriptionType;
 
     @Transient
@@ -364,6 +367,14 @@ public class Damage implements Serializable {
 
     public void setMinuteDuration(Long minuteDuration) {
         this.minuteDuration = minuteDuration;
+    }
+
+    public Long getSecondsDuration() {
+        return secondsDuration;
+    }
+
+    public void setSecondsDuration(Long secondsDuration) {
+        this.secondsDuration = secondsDuration;
     }
 
     @SuppressWarnings("null")

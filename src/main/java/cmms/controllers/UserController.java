@@ -180,7 +180,8 @@ public class UserController {
             if (id != null) {
                 ObjectMapper mapper = new ObjectMapper();
                 List users = (id.equals(UserTypeEnum.ELECTRICIAN.getId()) || id.equals(UserTypeEnum.ENGINEER.getId()))
-                        ? userDao.findByTypeOrderByNameAsc(id) : userDao.findAll(new Sort(Sort.Direction.ASC, "name"));
+                        ? userDao.findByTypeOrderByNameAsc(id)
+                        : userDao.findByTypeInOrderByNameAsc(new Integer[]{UserTypeEnum.ELECTRICIAN.getId(), UserTypeEnum.ENGINEER.getId()});
                 ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, User.class));
 
                 if (users != null && !users.isEmpty()) {

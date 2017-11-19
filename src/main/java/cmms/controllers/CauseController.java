@@ -151,7 +151,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
@@ -165,7 +165,7 @@ public class CauseController {
 
                 if (_causes != null && !_causes.isEmpty()) {
                     _causes.stream().forEach((cause) -> {
-                        cause.setId(OFFSET_CAUSE_ID + cause.getId());
+                        cause.setId(cause.getId());
                     });
                     causes.addAll(_causes);
                 }
@@ -260,7 +260,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
@@ -270,7 +270,7 @@ public class CauseController {
                 List<Cause> _causes = causeDao.findByTypeInAndDepartmentInAndEnableOrderByDescriptionAsc(typeIds, departmentIds, true);
                 if (_causes != null && !_causes.isEmpty()) {
                     _causes.stream().forEach((cause) -> {
-                        cause.setId(OFFSET_CAUSE_ID + cause.getId());
+                        cause.setId(cause.getId());
                     });
                     causes.addAll(_causes);
                 }
@@ -497,7 +497,7 @@ public class CauseController {
             RefCause refCause = mapper.readValue(jsonRefCause, RefCause.class);
 
             if (refCause != null) {
-                subcauseDao.saveAndFlush(new Subcause(refCause.getCauseId() - OFFSET_CAUSE_ID, Boolean.TRUE, null, refCause.getSubcause()));
+                subcauseDao.saveAndFlush(new Subcause(refCause.getCauseId(), Boolean.TRUE, null, refCause.getSubcause()));
             }
         }
         List<RefCause> values = null;

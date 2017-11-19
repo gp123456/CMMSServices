@@ -49,6 +49,10 @@ public class Subcause implements Serializable {
     public Subcause() {
     }
 
+    public Subcause(Long id) {
+        this.id = id;
+    }
+
     public Subcause(Long cause, Boolean enable, String code, String description) {
         this.cause = cause;
         this.enable = enable;
