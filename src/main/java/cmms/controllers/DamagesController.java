@@ -79,6 +79,8 @@ public class DamagesController {
         private static final Integer DAMAGE = 2;
     }
 
+    private static final Long OFFSET_CAUSE_ID = 10000l;
+
     private Date paretoFrom;
 
     private Date paretoTo;
@@ -967,6 +969,7 @@ public class DamagesController {
                         Machine machine = machineDao.findOne(damage.getMachine());
                         Long iwukidp = machine.getIWUKIDP();
 
+                        damage.setCause(damage.getType() == 3 ? damage.getCause() - OFFSET_CAUSE_ID : damage.getCause());
                         if (machine != null) {
                             damage.setDepartment(machine.getDepartment());
                             damage.setQ32$FAAL1(machine.getIW$FAAL1());
