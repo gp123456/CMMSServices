@@ -296,21 +296,28 @@ public class CauseController {
         try {
             if (type != null && user != null) {
                 ObjectMapper mapper = new ObjectMapper();
-                ObjectWriter typedWriter = (type.equals(CauseTypeEnum.DELAY.getId()))
-                        ? mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, Delay.class))
-                        : mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, Cause.class));
+                ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, Cause.class));
                 Collection<UserDepartment> uds = userDepartmentDao.findByUsers(user);
 
                 if (uds != null && !uds.isEmpty()) {
                     List<Long> departments = new ArrayList<>();
                     List<Long> types = new ArrayList<>(Arrays.asList(type));
+                    List<Cause> causes = new ArrayList<>();
 
                     uds.stream().forEach((ud) -> {
                         departments.add(ud.getDepartment());
                     });
-                    Collection<Object> causes = (type.equals(CauseTypeEnum.DELAY.getId()))
-                            ? delayDao.findByDepartmentInOrderByDescriptionAsc(departments)
-                            : causeDao.findByTypeInAndDepartmentInAndEnableOrderByDescriptionAsc(types, departments, true);
+                    if (type.equals(CauseTypeEnum.DELAY.getId())) {
+                        Collection<Delay> delays = delayDao.findByDepartmentInOrderByDescriptionAsc(departments);
+
+                        if (delays != null && !delays.isEmpty()) {
+                            for (Delay delay : delays) {
+                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                            }
+                        }
+                    } else {
+                        causes = causeDao.findByTypeInAndDepartmentInAndEnableOrderByDescriptionAsc(types, departments, true);
+                    }
 
                     response = (causes != null && !causes.isEmpty())
                             ? typedWriter.writeValueAsString(causes)

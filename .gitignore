@@ -25,3 +25,5 @@ tmp/
 .project
 RUNNING_PID
 /*.log
+/nbactions.xml
+/nbproject/project.properties
