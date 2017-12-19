@@ -24,4 +24,6 @@ public interface DelayDao extends JpaRepository<Delay, Long> {
      * @throws java.lang.Exception
      */
     public List findByDepartmentInOrderByDescriptionAsc(List department) throws Exception;
+    
+    public Delay findByIdAndDepartment(Long id, Long Department)throws Exception;
 } // class DelayDao
