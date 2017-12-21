@@ -54,7 +54,6 @@ public class CauseController {
 
     private static final Logger logger = Logger.getLogger(CauseController.class.getName());
 
-    private static final Long OFFSET_CAUSE_ID = 10000l;
 
     // ------------------------
     // PUBLIC METHODS
@@ -151,7 +150,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
@@ -260,7 +259,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             delays.stream().forEach((delay) -> {
-                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             });
                         }
                     } else {
@@ -312,7 +311,7 @@ public class CauseController {
 
                         if (delays != null && !delays.isEmpty()) {
                             for (Delay delay : delays) {
-                                causes.add(new Cause(OFFSET_CAUSE_ID + delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
+                                causes.add(new Cause(delay.getId(), 3l, delay.getDepartment(), true, null, delay.getDescription()));
                             }
                         }
                     } else {

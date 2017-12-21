@@ -79,8 +79,6 @@ public class DamagesController {
 	private static final Integer DAMAGE = 2;
     }
 
-    private static final Long OFFSET_CAUSE_ID = 10000l;
-
     private Date paretoFrom;
 
     private Date paretoTo;
@@ -963,7 +961,7 @@ public class DamagesController {
 			    }
 			    if (damage.getCause() != null) {
 				if (damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
-				    Delay delay = delayDao.findByIdAndDepartment(damage.getCause() - OFFSET_CAUSE_ID, damage.getDepartment());
+				    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
 
 				    if (delay != null) {
 					d.setCause(delay.getId());
@@ -1028,8 +1026,7 @@ public class DamagesController {
 			Machine machine = machineDao.findOne(damage.getMachine());
 			Long iwukidp = machine.getIWUKIDP();
 
-			damage.setCause(
-				damage.getType() == 3 ? damage.getCause() - OFFSET_CAUSE_ID : damage.getCause());
+			damage.setCause(damage.getCause());
 			if (machine != null) {
 			    damage.setDepartment(machine.getDepartment());
 			    damage.setQ32$FAAL1(machine.getIW$FAAL1());
@@ -1264,11 +1261,6 @@ public class DamagesController {
 			if (criteria.getCauses() != null && criteria.getSubcauses().length == 0) {
 			    List<Subcause> subcauses = new ArrayList<>();
 
-			    for (Long cause : criteria.getCauses()) {
-				if (cause.compareTo(OFFSET_CAUSE_ID) > 0) {
-				    subcauses.add(new Subcause(cause - OFFSET_CAUSE_ID));
-				}
-			    }
 			    subcauses.addAll(subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(
 				    Arrays.asList(criteria.getCauses()), Boolean.TRUE));
 
@@ -1425,11 +1417,23 @@ public class DamagesController {
 	Double totalDuration = 0.0;
 
 	for (Damage damage : damages) {
-	    Subcause subcause = subcauseDao.findOne(damage.getCause());
+            if (!damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+                Subcause subcause = subcauseDao.findOne(damage.getCause());
 
-	    if (subcause != null) {
-		totalDuration += damage.getDuration();
-	    }
+                if (subcause != null) {
+                    totalDuration += damage.getDuration();
+                }
+            }else{
+                try{
+                    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
+                    if (delay != null) {
+                        totalDuration += damage.getDuration();
+                    }
+                }catch (Exception ex) {
+                    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+                }
+            }
+	    
 	}
 
 	return totalDuration / 60.0;
@@ -1445,7 +1449,16 @@ public class DamagesController {
 		if (subcause != null) {
 		    totalCause++;
 		}
-	    }
+	    }else{
+                try{
+                    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
+                    if (delay != null) {
+                        totalCause++;
+                    }
+                }catch (Exception ex) {
+                    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+                }
+            }
 	}
 
 	return (!totalCause.equals(0l)) ? totalCause : 1l;

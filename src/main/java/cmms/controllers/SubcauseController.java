@@ -31,8 +31,6 @@ public class SubcauseController {
 
     private static final Logger logger = Logger.getLogger(SubcauseController.class.getName());
 
-    private static final Long OFFSET_CAUSE_ID = 10000l;
-
     // ------------------------
     // PUBLIC METHODS
     // ------------------------
@@ -84,13 +82,10 @@ public class SubcauseController {
                 ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Collection.class, Subcause.class));
 
                 for (String cause : id) {
+                    
                     Long _cause = Long.parseLong(cause);
-
-                    if (_cause.compareTo(OFFSET_CAUSE_ID) > 0) {
-                        causes.add(_cause - OFFSET_CAUSE_ID);
-                    } else {
-                        causes.add(_cause);
-                    }
+                    causes.add(_cause);
+                    
                 }
 
                 Collection<Subcause> subcauses = subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(causes, true);
