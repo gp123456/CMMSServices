@@ -449,7 +449,7 @@ public class DamagesController {
 		for (Damage damage : damages) {
 		    if (!causeId.equals(damage.getCause())) {
 			if (!causeId.equals(0l)) {
-			    if (damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+			    if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
 				Delay delay = delayDao.findByIdAndDepartment(causeId, departmentId);
 
 				if (delay != null) {
@@ -539,7 +539,6 @@ public class DamagesController {
 		    } else {
 			prev = null;
 		    }
-
 		    paretos.get(i).setPercent(getPercent(current, prev, totalDuration / 60.0));
 		}
 
