@@ -439,10 +439,10 @@ public class DamagesController {
 		Double delayDuration = getDelaySpecific();
 		Double totalDuration = getTotalDuration(damages);
 		ObjectMapper mapper = new ObjectMapper();
-		Map<Cause,Long> level1Cause= new HashMap<>();
+		Map<Cause, Long> level1Cause = new HashMap<>();
 		List<Pareto> paretos = new ArrayList<>();
 		Long totalCause = getTotalCause(damages);
-		Long causeId = 0l, departmentId = 0l, typeId = 0l, sum = 0l, causeSum= 0l;
+		Long causeId = 0l, departmentId = 0l, typeId = 0l, sum = 0l, causeSum = 0l;
 
 		Collections.sort(damages, (a, b) -> b.getCause().compareTo(a.getCause()));
 
@@ -462,19 +462,21 @@ public class DamagesController {
 				    if (subcause.getCause() != null) {
 					Cause cause = causeDao.findOne(subcause.getCause());
 
-					if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)){
-                                        causeSum = sum;
-                                        level1Cause.put(cause, causeSum);
-                                        } else{
-                                            if (level1Cause.containsKey(cause)){
-                                                causeSum = level1Cause.get(cause).longValue();
-                                                causeSum += sum;
-                                                level1Cause.put(cause, causeSum);
-                                            }
-                                        }
-                                        if (criteria.getCauses().length != 0){
-                                            paretos.add(new Pareto(cause.getDescription() + "[" + subcause.getDescription() + "]", sum));
-                                        }
+					if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
+					    causeSum = sum;
+					    level1Cause.put(cause, causeSum);
+					} else {
+					    if (level1Cause.containsKey(cause)) {
+						causeSum = level1Cause.get(cause).longValue();
+						causeSum += sum;
+						level1Cause.put(cause, causeSum);
+					    }
+					}
+					if (criteria.getCauses().length != 0) {
+					    paretos.add(new Pareto(
+						    cause.getDescription() + "[" + subcause.getDescription() + "]",
+						    sum));
+					}
 				    } else {
 					paretos.add(new Pareto(subcause.getDescription(), sum));
 				    }
@@ -482,49 +484,50 @@ public class DamagesController {
 			    }
 			}
 			causeId = damage.getCause();
-                        departmentId = damage.getDepartment();
-                        typeId = damage.getType();
+			departmentId = damage.getDepartment();
+			typeId = damage.getType();
 			sum = damage.getDuration();
 		    } else {
 			sum += damage.getDuration();
 		    }
 		}
-                if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
-                    Delay delay = delayDao.findByIdAndDepartment(causeId, departmentId);
-                    if (delay != null) {
-                        paretos.add(new Pareto(delay.getDescription(), sum));
-                    }
-                } else {
-                    Subcause subcause = subcauseDao.findOne(causeId);
+		if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
+		    Delay delay = delayDao.findByIdAndDepartment(causeId, departmentId);
+		    if (delay != null) {
+			paretos.add(new Pareto(delay.getDescription(), sum));
+		    }
+		} else {
+		    Subcause subcause = subcauseDao.findOne(causeId);
 
-                    if (subcause != null) {
-                        if (subcause.getCause() != null) {
-                            Cause cause = causeDao.findOne(subcause.getCause());
+		    if (subcause != null) {
+			if (subcause.getCause() != null) {
+			    Cause cause = causeDao.findOne(subcause.getCause());
 
-                            if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)){
-                                causeSum = sum;
-                                level1Cause.put(cause, causeSum);
-                            } else{
-                                if (level1Cause.containsKey(cause)){
-                                    causeSum = level1Cause.get(cause).longValue();
-                                    causeSum += sum;
-                                    level1Cause.put(cause, causeSum);
-                                }
-                            }
-                            if (criteria.getCauses().length != 0){
-                                paretos.add(new Pareto(cause.getDescription() + "[" + subcause.getDescription() + "]", sum));
-                            }
-                        } else {
-                            paretos.add(new Pareto(subcause.getDescription(), sum));
-                        }
-                    }
-                }
-		
-		if (criteria.getCauses().length == 0){
-                   for (Map.Entry<Cause, Long> entry : level1Cause.entrySet()){
-                       paretos.add(new Pareto(entry.getKey().getDescription(), entry.getValue()));
-                   }
-               }
+			    if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
+				causeSum = sum;
+				level1Cause.put(cause, causeSum);
+			    } else {
+				if (level1Cause.containsKey(cause)) {
+				    causeSum = level1Cause.get(cause).longValue();
+				    causeSum += sum;
+				    level1Cause.put(cause, causeSum);
+				}
+			    }
+			    if (criteria.getCauses().length != 0) {
+				paretos.add(new Pareto(cause.getDescription() + "[" + subcause.getDescription() + "]",
+					sum));
+			    }
+			} else {
+			    paretos.add(new Pareto(subcause.getDescription(), sum));
+			}
+		    }
+		}
+
+		if (criteria.getCauses().length == 0) {
+		    for (Map.Entry<Cause, Long> entry : level1Cause.entrySet()) {
+			paretos.add(new Pareto(entry.getKey().getDescription(), entry.getValue()));
+		    }
+		}
 
 		Collections.sort(paretos, (a, b) -> b.getDelay().compareTo(a.getDelay()));
 
@@ -941,6 +944,7 @@ public class DamagesController {
 			Damage d = damageDao.findOne(damage.getId());
 
 			if (d != null) {
+			    damage.setDepartment(d.getDepartment());
 			    if (!Strings.isNullOrEmpty(damage.getUser())) {
 				User user = userDao.findOne(damage.getUser());
 
@@ -960,7 +964,8 @@ public class DamagesController {
 			    }
 			    if (damage.getCause() != null) {
 				if (damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
-				    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
+				    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(),
+					    damage.getDepartment());
 
 				    if (delay != null) {
 					d.setCause(delay.getId());
@@ -1196,12 +1201,12 @@ public class DamagesController {
 
 		description = (c != null) ? c.getDescription() : "";
 	    } else {
-                try{
-                    Delay d = delayDao.findByIdAndDepartment(causeId, department);
-                    description = (d != null) ? d.getDescription() : "";
-                }catch (Exception ex) {
-                    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
-                }
+		try {
+		    Delay d = delayDao.findByIdAndDepartment(causeId, department);
+		    description = (d != null) ? d.getDescription() : "";
+		} catch (Exception ex) {
+		    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+		}
 	    }
 	}
 
@@ -1416,23 +1421,23 @@ public class DamagesController {
 	Double totalDuration = 0.0;
 
 	for (Damage damage : damages) {
-            if (!damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
-                Subcause subcause = subcauseDao.findOne(damage.getCause());
+	    if (!damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+		Subcause subcause = subcauseDao.findOne(damage.getCause());
 
-                if (subcause != null) {
-                    totalDuration += damage.getDuration();
-                }
-            }else{
-                try{
-                    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
-                    if (delay != null) {
-                        totalDuration += damage.getDuration();
-                    }
-                }catch (Exception ex) {
-                    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
-                }
-            }
-	    
+		if (subcause != null) {
+		    totalDuration += damage.getDuration();
+		}
+	    } else {
+		try {
+		    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
+		    if (delay != null) {
+			totalDuration += damage.getDuration();
+		    }
+		} catch (Exception ex) {
+		    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+		}
+	    }
+
 	}
 
 	return totalDuration / 60.0;
@@ -1448,16 +1453,16 @@ public class DamagesController {
 		if (subcause != null) {
 		    totalCause++;
 		}
-	    }else{
-                try{
-                    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
-                    if (delay != null) {
-                        totalCause++;
-                    }
-                }catch (Exception ex) {
-                    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
-                }
-            }
+	    } else {
+		try {
+		    Delay delay = delayDao.findByIdAndDepartment(damage.getCause(), damage.getDepartment());
+		    if (delay != null) {
+			totalCause++;
+		    }
+		} catch (Exception ex) {
+		    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+		}
+	    }
 	}
 
 	return (!totalCause.equals(0l)) ? totalCause : 1l;
