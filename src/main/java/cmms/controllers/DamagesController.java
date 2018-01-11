@@ -438,10 +438,12 @@ public class DamagesController {
 		Double criteriaDuration = ((paretoTo.getTime() - paretoFrom.getTime()) * machines) / 60000.;
 		Double delayDuration = getDelaySpecific();
 		Double totalDuration = getTotalDuration(damages);
+		Double totalDurationCause = getTotalDurationCause(damages);
 		ObjectMapper mapper = new ObjectMapper();
 		Map<Cause, Long> level1Cause = new HashMap<>();
 		List<Pareto> paretos = new ArrayList<>();
 		Long totalCause = getTotalCause(damages);
+		Long countCause = getCountCause(damages);
 		Long causeId = 0l, departmentId = 0l, typeId = 0l, sum = 0l, causeSum = 0l;
 
 		Collections.sort(damages, (a, b) -> b.getCause().compareTo(a.getCause()));
@@ -546,7 +548,7 @@ public class DamagesController {
 		}
 
 		response = mapper.writeValueAsString(new DepartmentPareto(1l, "current filter", paretos,
-			new BigDecimal(totalDuration / totalCause).setScale(2, RoundingMode.CEILING),
+			new BigDecimal(totalDurationCause / countCause).setScale(2, RoundingMode.CEILING),
 			new BigDecimal((criteriaDuration - (totalDuration + delayDuration)) / totalCause).setScale(2,
 				RoundingMode.CEILING),
 			getMachineCodes(damages)));
@@ -1443,6 +1445,23 @@ public class DamagesController {
 	return totalDuration / 60.0;
     }
 
+    private Double getTotalDurationCause(List<Damage> damages) {
+	Double totalDuration = 0.0;
+
+	for (Damage damage : damages) {
+	    if (!damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+		Subcause subcause = subcauseDao.findOne(damage.getCause());
+
+		if (subcause != null) {
+		    totalDuration += damage.getDuration();
+		}
+	    }
+
+	}
+
+	return totalDuration / 60.0;
+    }
+
     private Long getTotalCause(List<Damage> damages) {
 	Long totalCause = 0l;
 
@@ -1461,6 +1480,22 @@ public class DamagesController {
 		    }
 		} catch (Exception ex) {
 		    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+		}
+	    }
+	}
+
+	return (!totalCause.equals(0l)) ? totalCause : 1l;
+    }
+
+    private Long getCountCause(List<Damage> damages) {
+	Long totalCause = 0l;
+
+	for (Damage damage : damages) {
+	    if (!damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+		Subcause subcause = subcauseDao.findOne(damage.getCause());
+
+		if (subcause != null) {
+		    totalCause++;
 		}
 	    }
 	}
