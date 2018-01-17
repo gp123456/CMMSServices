@@ -83,9 +83,9 @@ public class Damage implements Serializable {
     private String Q32$STA;
 
     @NotNull
-    @Column(insertable = true, updatable = true)
+    @Column(name = "Q32UPMJ", insertable = true, updatable = true)
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
-    private Date Q32UPMJ;
+    private Date inserted;
 
     private String Q32UPID;
 
@@ -123,7 +123,7 @@ public class Damage implements Serializable {
     private String descriptionSubcause;
 
     private Damage(Builder builder) {
-        this.machine = builder.machine;
+	this.machine = builder.machine;
     }
 
     // ------------------------
@@ -133,305 +133,297 @@ public class Damage implements Serializable {
     }
 
     public Damage(Long id) {
-        this.id = id;
+	this.id = id;
     }
 
     // Getter and setter methods
     public Long getId() {
-        return id;
+	return id;
     }
 
     public void setId(Long id) {
-        this.id = id;
+	this.id = id;
     }
 
     public Date getCreated() {
-        return created;
+	return created;
     }
 
     public void setCreated(Date created) {
-        this.created = created;
+	this.created = created;
     }
 
     public String getUser() {
-        return user;
+	return user;
     }
 
     public void setUser(String user) {
-        this.user = user;
+	this.user = user;
     }
 
     public Long getDepartment() {
-        return department;
+	return department;
     }
 
     public void setDepartment(Long department) {
-        this.department = department;
+	this.department = department;
     }
 
     public String getQ32MCU() {
-        return Q32MCU;
+	return Q32MCU;
     }
 
     public void setQ32MCU(String Q32MCU) {
-        this.Q32MCU = Q32MCU;
+	this.Q32MCU = Q32MCU;
     }
 
     public Long getType() {
-        return type;
+	return type;
     }
 
     public void setType(Long type) {
-        this.type = type;
+	this.type = type;
     }
 
     public Long getCause() {
-        return cause;
+	return cause;
     }
 
     public void setCause(Long cause) {
-        this.cause = cause;
+	this.cause = cause;
     }
 
     public String getDescriptionSubcause() {
-        return descriptionSubcause;
+	return descriptionSubcause;
     }
 
     public void setDescriptionSubcause(String descriptionSubcause) {
-        this.descriptionSubcause = descriptionSubcause;
+	this.descriptionSubcause = descriptionSubcause;
     }
 
     public String getQ32LOCN() {
-        return Q32LOCN;
+	return Q32LOCN;
     }
 
     public void setQ32LOCN(String Q32LOCN) {
-        this.Q32LOCN = Q32LOCN;
+	this.Q32LOCN = Q32LOCN;
     }
 
     public Long getMachine() {
-        return machine;
+	return machine;
     }
 
     public void setMachine(Long machine) {
-        this.machine = machine;
+	this.machine = machine;
     }
 
     public String getQ32$FAAL1() {
-        return Q32$FAAL1;
+	return Q32$FAAL1;
     }
 
     public void setQ32$FAAL1(String Q32$FAAL1) {
-        this.Q32$FAAL1 = Q32$FAAL1;
+	this.Q32$FAAL1 = Q32$FAAL1;
     }
 
     public String getQ32$LINE() {
-        return Q32$LINE;
+	return Q32$LINE;
     }
 
     public void setQ32$LINE(String Q32$LINE) {
-        this.Q32$LINE = Q32$LINE;
+	this.Q32$LINE = Q32$LINE;
     }
 
     public String getQ32$SHFT() {
-        return Q32$SHFT;
+	return Q32$SHFT;
     }
 
     public void setQ32$SHFT(String Q32$SHFT) {
-        this.Q32$SHFT = Q32$SHFT;
+	this.Q32$SHFT = Q32$SHFT;
     }
 
     public String getQ32$IDDLR() {
-        return Q32$IDDLR;
+	return Q32$IDDLR;
     }
 
     public void setQ32$IDDLR(String Q32$IDDLR) {
-        this.Q32$IDDLR = Q32$IDDLR;
+	this.Q32$IDDLR = Q32$IDDLR;
     }
 
     public Long getDuration() {
-        return duration;
+	return duration;
     }
 
     public void setDuration(Long duration) {
-        this.duration = duration;
+	this.duration = duration;
     }
 
     public Long getQ32UKIDP() {
-        return Q32UKIDP;
+	return Q32UKIDP;
     }
 
     public void setQ32UKIDP(Long Q32UKIDP) {
-        this.Q32UKIDP = Q32UKIDP;
+	this.Q32UKIDP = Q32UKIDP;
     }
 
     public String getQ32$STA() {
-        return Q32$STA;
+	return Q32$STA;
     }
 
     public void setQ32$STA(String Q32$STA) {
-        this.Q32$STA = Q32$STA;
+	this.Q32$STA = Q32$STA;
     }
 
-    public Date getQ32UPMJ() {
-        return Q32UPMJ;
+    public Date getInserted() {
+	return inserted;
     }
 
-    public void setQ32UPMJ(Date Q32UPMJ) {
-        this.Q32UPMJ = Q32UPMJ;
+    public void setInserted(Date inserted) {
+	this.inserted = inserted;
     }
 
     public String getQ32UPID() {
-        return Q32UPID;
+	return Q32UPID;
     }
 
     public void setQ32UPID(String Q32UPID) {
-        this.Q32UPID = Q32UPID;
+	this.Q32UPID = Q32UPID;
     }
 
     public String getQ32UPMB() {
-        return Q32UPMB;
+	return Q32UPMB;
     }
 
     public void setQ32UPMB(String Q32UPMB) {
-        this.Q32UPMB = Q32UPMB;
+	this.Q32UPMB = Q32UPMB;
     }
 
     public String getNote() {
-        return note;
+	return note;
     }
 
     public void setNote(String note) {
-        this.note = note;
+	this.note = note;
     }
 
     public Boolean getDeleted() {
-        return deleted;
+	return deleted;
     }
 
     public void setDeleted(Boolean deleted) {
-        this.deleted = deleted;
+	this.deleted = deleted;
     }
 
     public String getDescriptionType() {
-        return descriptionType;
+	return descriptionType;
     }
 
     public void setDescriptionType(String descriptionType) {
-        this.descriptionType = descriptionType;
+	this.descriptionType = descriptionType;
     }
 
     public String getDescriptionDepartment() {
-        return descriptionDepartment;
+	return descriptionDepartment;
     }
 
     public void setDescriptionDepartment(String descriptionDepartment) {
-        this.descriptionDepartment = descriptionDepartment;
+	this.descriptionDepartment = descriptionDepartment;
     }
 
     public String getDescriptionMachine() {
-        return descriptionMachine;
+	return descriptionMachine;
     }
 
     public void setDescriptionMachine(String descriptionMachine) {
-        this.descriptionMachine = descriptionMachine;
+	this.descriptionMachine = descriptionMachine;
     }
 
     public String getDescriptionCause() {
-        return descriptionCause;
+	return descriptionCause;
     }
 
     public void setDescriptionCause(String descriptionCause) {
-        this.descriptionCause = descriptionCause;
+	this.descriptionCause = descriptionCause;
     }
 
     public String getDescriptionUser() {
-        return descriptionUser;
+	return descriptionUser;
     }
 
     public void setDescriptionUser(String descriptionUser) {
-        this.descriptionUser = descriptionUser;
+	this.descriptionUser = descriptionUser;
     }
 
     public String getQ32$STEP() {
-        return Q32$STEP;
+	return Q32$STEP;
     }
 
     public void setQ32$STEP(String Q32$STEP) {
-        this.Q32$STEP = Q32$STEP;
+	this.Q32$STEP = Q32$STEP;
     }
 
     public Long getMinuteDuration() {
-        return minuteDuration;
+	return minuteDuration;
     }
 
     public void setMinuteDuration(Long minuteDuration) {
-        this.minuteDuration = minuteDuration;
+	this.minuteDuration = minuteDuration;
     }
 
     public Long getSecondsDuration() {
-        return secondsDuration;
+	return secondsDuration;
     }
 
     public void setSecondsDuration(Long secondsDuration) {
-        this.secondsDuration = secondsDuration;
+	this.secondsDuration = secondsDuration;
     }
 
     @SuppressWarnings("null")
     public void setChanges(Damage value) {
-        if (!value.type.equals(this.type)) {
-            this.type = value.type;
-        }
-        if (value.department != null && !value.department.equals(this.department)) {
-            this.department = value.department;
-        }
-        if (!value.machine.equals(this.machine)) {
-            this.machine = value.machine;
-        }
-        if (!value.cause.equals(this.cause)) {
-            this.cause = value.cause;
-        }
-        if (!value.user.equals(this.user)) {
-            this.user = value.user;
-        }
-        if (value.created != this.created) {
-            this.created = value.created;
-        }
-        if (!value.duration.equals(this.duration)) {
-            this.duration = value.duration;
-        }
-        if (!Strings.isNullOrEmpty(value.note) && !value.note.equals(this.note)) {
-            this.note = value.note;
-        }
+	if (!value.type.equals(this.type)) {
+	    this.type = value.type;
+	}
+	if (value.department != null && !value.department.equals(this.department)) {
+	    this.department = value.department;
+	}
+	if (!value.machine.equals(this.machine)) {
+	    this.machine = value.machine;
+	}
+	if (!value.cause.equals(this.cause)) {
+	    this.cause = value.cause;
+	}
+	if (!value.user.equals(this.user)) {
+	    this.user = value.user;
+	}
+	if (value.created != this.created) {
+	    this.created = value.created;
+	}
+	if (!value.duration.equals(this.duration)) {
+	    this.duration = value.duration;
+	}
+	if (!Strings.isNullOrEmpty(value.note) && !value.note.equals(this.note)) {
+	    this.note = value.note;
+	}
     }
 
     @Override
     public String toString() {
-        return "Damage{"
-                + "id=" + id
-                + ",type=" + type
-                + ",department=" + department
-                + ",machine=" + machine
-                + ",cause=" + cause
-                + ",subcause=" + descriptionSubcause
-                + ",created=" + created
-                + ",duration=" + duration
-                + ",user=" + user
-                + ",note=" + note + '}';
+	return "Damage{" + "id=" + id + ",type=" + type + ",department=" + department + ",machine=" + machine
+		+ ",cause=" + cause + ",subcause=" + descriptionSubcause + ",created=" + created + ",duration="
+		+ duration + ",user=" + user + ",note=" + note + '}';
     }
 
     public static class Builder {
 
-        private Long machine;
+	private Long machine;
 
-        public Builder setMachine(Long machine) {
-            this.machine = machine;
+	public Builder setMachine(Long machine) {
+	    this.machine = machine;
 
-            return this;
-        }
+	    return this;
+	}
 
-        public Damage build() {
-            return new Damage(this);
-        }
+	public Damage build() {
+	    return new Damage(this);
+	}
     }
 } // class Damage

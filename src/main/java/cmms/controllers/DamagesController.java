@@ -129,7 +129,7 @@ public class DamagesController {
 			});
 
 			Collection<Damage> damages = damageDao
-				.findByCreatedBetweenAndDepartmentInAndTypeInAndDeletedOrderByCreatedDesc(from,
+				.findByInsertedBetweenAndDepartmentInAndTypeInAndDeletedOrderByCreatedDesc(from,
 					new Date(), departments,
 					(user.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
 						? Arrays.asList(CauseTypeEnum.ELECRTICAL.getId())
@@ -141,6 +141,7 @@ public class DamagesController {
 					Boolean.FALSE);
 			Double delayDuration = getDelayDurationCurrentShift(from, new Date(), departments, null) / 60.;
 			Long period = new Date().getTime() - from.getTime();
+			Integer machines = getDepartmentMachines(departments.toArray(new Long[departments.size()]));
 
 			if (damages != null && !damages.isEmpty()) {
 			    damages.stream().forEach((damage) -> {
@@ -150,6 +151,7 @@ public class DamagesController {
 			    values.put("damages", response);
 			    values.put("period", period.toString());
 			    values.put("delayDuration", delayDuration.toString());
+			    values.put("machines", machines.toString());
 			    response = mapper.writeValueAsString(values);
 			} else {
 			    logger.log(Level.INFO, "There weren't damages for the user department(s) id:{0}", id);
@@ -199,12 +201,12 @@ public class DamagesController {
 			    mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
 
 		    Collection<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
-			    ? damageDao.findByCreatedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
+			    ? damageDao.findByInsertedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
 				    new Date(), id, CauseTypeEnum.ELECRTICAL.getId(), Boolean.FALSE)
 			    : (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
-				    ? damageDao.findByCreatedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
+				    ? damageDao.findByInsertedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
 					    new Date(), id, CauseTypeEnum.MECHANICAL.getId(), Boolean.FALSE)
-				    : damageDao.findByCreatedBetweenAndMachineAndDeletedOrderByCreatedDesc(from,
+				    : damageDao.findByInsertedBetweenAndMachineAndDeletedOrderByCreatedDesc(from,
 					    new Date(), id, Boolean.FALSE);
 		    Double delayDuration = getDelayDurationCurrentShift(from, new Date(), null, id) / 60.;
 		    Long period = new Date().getTime() - from.getTime();
@@ -217,6 +219,7 @@ public class DamagesController {
 			values.put("damages", response);
 			values.put("period", period.toString());
 			values.put("delayDuration", delayDuration.toString());
+			values.put("machines", "1");
 			response = mapper.writeValueAsString(values);
 		    } else {
 			logger.log(Level.INFO, "There weren't damages for the department:{0} and user{1}",
@@ -265,16 +268,17 @@ public class DamagesController {
 		    ObjectWriter typedWriter = mapper.writerWithType(
 			    mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
 		    Collection<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
-			    ? damageDao.findByCreatedBetweenAndDepartmentAndTypeAndDeletedOrderByCreatedDesc(from,
+			    ? damageDao.findByInsertedBetweenAndDepartmentAndTypeAndDeletedOrderByCreatedDesc(from,
 				    new Date(), id, CauseTypeEnum.ELECRTICAL.getId(), Boolean.FALSE)
 			    : (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
-				    ? damageDao.findByCreatedBetweenAndDepartmentAndTypeAndDeletedOrderByCreatedDesc(
+				    ? damageDao.findByInsertedBetweenAndDepartmentAndTypeAndDeletedOrderByCreatedDesc(
 					    from, new Date(), id, CauseTypeEnum.MECHANICAL.getId(), Boolean.FALSE)
-				    : damageDao.findByCreatedBetweenAndDepartmentAndDeletedOrderByCreatedDesc(from,
+				    : damageDao.findByInsertedBetweenAndDepartmentAndDeletedOrderByCreatedDesc(from,
 					    new Date(), id, Boolean.FALSE);
 		    Double delayDuration = getDelayDurationCurrentShift(from, new Date(), Arrays.asList(id), null)
 			    / 60.;
 		    Long period = new Date().getTime() - from.getTime();
+		    Integer machines = getDepartmentMachines(new Long[] { id });
 
 		    if (damages != null && !damages.isEmpty()) {
 			damages.stream().forEach((Damage damage) -> {
@@ -284,6 +288,7 @@ public class DamagesController {
 			values.put("damages", response);
 			values.put("period", period.toString());
 			values.put("delayDuration", delayDuration.toString());
+			values.put("machines", machines.toString());
 			response = mapper.writeValueAsString(values);
 		    } else {
 			logger.log(Level.INFO, "There weren't damages for the department:{0}", id);
@@ -321,11 +326,15 @@ public class DamagesController {
 		ObjectWriter typedWriter = mapper.writerWithType(
 			mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
 		Long period = criteria.getTo().getTime() - criteria.getFrom().getTime();
+		Integer machines = (criteria.getMachines().length != 0) ? criteria.getMachines().length
+			: (criteria.getDepartments().length != 0) ? getDepartmentMachines(criteria.getDepartments())
+				: machineDao.findAll().size();
 
 		response = typedWriter.writeValueAsString(damages);
 		values.put("damages", response);
 		values.put("period", period.toString());
 		values.put("delayDuration", (delayDuration != null) ? delayDuration.toString() : "0.0");
+		values.put("machines", machines.toString());
 		response = mapper.writeValueAsString(values);
 	    }
 	} catch (Exception ex) {
@@ -434,7 +443,9 @@ public class DamagesController {
 	    List<Damage> damages = getDamageSpecific(CriteriaType.PARETO, "cause");
 
 	    if (damages != null && !damages.isEmpty()) {
-		Long machines = getMachinesByDamages(damages);
+		Integer machines = (criteria.getMachines().length != 0) ? criteria.getMachines().length
+			: (criteria.getDepartments().length != 0) ? getDepartmentMachines(criteria.getDepartments())
+				: machineDao.findAll().size();
 		Double criteriaDuration = ((paretoTo.getTime() - paretoFrom.getTime()) * machines) / 60000.;
 		Double delayDuration = getDelaySpecific();
 		Double totalDuration = getTotalDuration(damages);
@@ -601,16 +612,16 @@ public class DamagesController {
 				/ 60.0;
 			Long totalCause = (dbuser.getType()
 				.equals(UserTypeEnum.ELECTRICIAN.getId()))
-					? damageDao.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(
+					? damageDao.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(
 						from, new Date(),
 						departmentIds, Arrays.asList(CauseTypeEnum.ELECRTICAL.getId()),
 						Boolean.FALSE)
 					: (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
-						? damageDao.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(
+						? damageDao.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(
 							from, new Date(), departmentIds,
 							Arrays.asList(CauseTypeEnum.MECHANICAL.getId()), Boolean.FALSE)
 						: damageDao
-							.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(from,
+							.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(from,
 								new Date(), departmentIds,
 								Arrays.asList(CauseTypeEnum.ELECRTICAL.getId(),
 									CauseTypeEnum.MECHANICAL.getId()),
@@ -658,9 +669,13 @@ public class DamagesController {
 			    }
 
 			    Double currentShiftDuration = (new Date().getTime() - from.getTime()) / 60000.;
-			    List<Long> dbmachines = damageDao.countMachinesByDepartmentInShift(departmentIds, from,
-				    new Date());
-			    Long machines = (dbmachines != null && !dbmachines.isEmpty()) ? dbmachines.size() : 1l;
+			    // List<Long> dbmachines =
+			    // damageDao.countMachinesByDepartmentInShift(departmentIds,
+			    // from,new Date());
+			    // Long machines = (dbmachines != null &&
+			    // !dbmachines.isEmpty()) ? dbmachines.size() : 1l;
+			    Integer machines = getDepartmentMachines(
+				    departmentIds.toArray(new Long[departmentIds.size()]));
 
 			    response = mapper.writeValueAsString(new DepartmentPareto(
 				    Long.valueOf(departmentIds.size()), "login user:" + user, paretos,
@@ -724,16 +739,16 @@ public class DamagesController {
 				new Date()) / 60.;
 			Long totalCause = (dbuser.getType()
 				.equals(UserTypeEnum.ELECTRICIAN.getId()))
-					? damageDao.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(
+					? damageDao.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(
 						from, new Date(),
 						Arrays.asList(id), Arrays.asList(CauseTypeEnum.ELECRTICAL.getId()),
 						Boolean.FALSE)
 					: (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
-						? damageDao.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(
+						? damageDao.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(
 							from, new Date(), Arrays.asList(id),
 							Arrays.asList(CauseTypeEnum.MECHANICAL.getId()), Boolean.FALSE)
 						: damageDao
-							.countByCreatedBetweenAndDepartmentInAndTypeInAndDeleted(from,
+							.countByInsertedBetweenAndDepartmentInAndTypeInAndDeleted(from,
 								new Date(), Arrays.asList(id),
 								Arrays.asList(CauseTypeEnum.ELECRTICAL.getId(),
 									CauseTypeEnum.MECHANICAL.getId()),
@@ -781,9 +796,12 @@ public class DamagesController {
 			    }
 
 			    Double currentShiftDuration = (new Date().getTime() - from.getTime()) / 60000.;
-			    List<Long> dbmachines = damageDao.countMachinesByDepartmentInShift(Arrays.asList(id), from,
-				    new Date());
-			    Long machines = (dbmachines != null && !dbmachines.equals(0l)) ? dbmachines.size() : 1l;
+			    // List<Long> dbmachines =
+			    // damageDao.countMachinesByDepartmentInShift(Arrays.asList(id),
+			    // from, new Date());
+			    // Long machines = (dbmachines != null &&
+			    // !dbmachines.equals(0l)) ? dbmachines.size() : 1l;
+			    Integer machines = getDepartmentMachines(new Long[] { id });
 
 			    response = mapper.writeValueAsString(new DepartmentPareto(id, "", paretos,
 				    new BigDecimal((causeDuration / 60.) / totalCause).setScale(2,
@@ -846,14 +864,14 @@ public class DamagesController {
 			    Double totalDuration = damageDao.sumDurationByMachineShift(machine.getId(), from,
 				    new Date()) / 60.;
 			    Long totalCause = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
-				    ? damageDao.countByCreatedBetweenAndMachineAndTypeInAndDeleted(from,
+				    ? damageDao.countByInsertedBetweenAndMachineAndTypeInAndDeleted(from,
 					    new Date(), id, Arrays.asList(CauseTypeEnum.ELECRTICAL.getId()),
 					    Boolean.FALSE)
 				    : (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
-					    ? damageDao.countByCreatedBetweenAndMachineAndTypeInAndDeleted(
+					    ? damageDao.countByInsertedBetweenAndMachineAndTypeInAndDeleted(
 						    from, new Date(), id,
 						    Arrays.asList(CauseTypeEnum.MECHANICAL.getId()), Boolean.FALSE)
-					    : damageDao.countByCreatedBetweenAndMachineAndTypeInAndDeleted(from,
+					    : damageDao.countByInsertedBetweenAndMachineAndTypeInAndDeleted(from,
 						    new Date(), id, Arrays.asList(CauseTypeEnum.ELECRTICAL.getId(),
 							    CauseTypeEnum.MECHANICAL.getId()),
 						    Boolean.FALSE);
@@ -1044,7 +1062,7 @@ public class DamagesController {
 			    damage.setQ32MCU(machine.getIWMCU().toString());
 			    damage.setQ32UKIDP((iwukidp != null) ? machine.getIWUKIDP() : 0l);
 			    damage.setQ32UPID("DLAD");
-			    damage.setQ32UPMJ(new Date());
+			    damage.setInserted(new Date());
 			    damage.setQ32UPMB("0");
 			    damage.setDuration(damage.getDuration() * 60);
 			    damage.setDeleted(Boolean.FALSE);
@@ -1521,9 +1539,9 @@ public class DamagesController {
     private Long getDelayDurationCurrentShift(Date from, Date to, List departments, Long machine) throws Exception {
 	Long duration = 0l;
 	List<Damage> damages = (departments != null && !departments.isEmpty())
-		? damageDao.findByCreatedBetweenAndDepartmentInAndTypeAndDeletedOrderByCreatedDesc(from, to,
+		? damageDao.findByInsertedBetweenAndDepartmentInAndTypeAndDeletedOrderByCreatedDesc(from, to,
 			departments, CauseTypeEnum.DELAY.getId(), Boolean.FALSE)
-		: (machine != null) ? damageDao.findByCreatedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
+		: (machine != null) ? damageDao.findByInsertedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
 			to, machine, CauseTypeEnum.DELAY.getId(), Boolean.FALSE) : null;
 
 	if (damages != null && !damages.isEmpty()) {
@@ -1536,5 +1554,18 @@ public class DamagesController {
 
     private Boolean requestDelayOnly(Long[] types) {
 	return (types != null && types.length == 1 && types[0].equals(CauseTypeEnum.DELAY.getId()));
+    }
+
+    private Integer getDepartmentMachines(Long[] departments) {
+	try {
+	    Collection<Machine> machines = (Collection<Machine>) machineDao
+		    .findByDepartmentInOrderByCodeAsc(Arrays.asList(departments));
+
+	    return (machines != null) ? machines.size() : 0;
+	} catch (Exception ex) {
+	    Logger.getLogger(DamagesController.class.getName()).log(Level.SEVERE, null, ex);
+	}
+
+	return 0;
     }
 } // class DamageController
