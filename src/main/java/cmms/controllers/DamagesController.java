@@ -405,6 +405,7 @@ public class DamagesController {
 		    });
 		    List<Damage> damages = damageDao.findByDepartmentInAndDeletedOrderByCreatedDesc(departmentIds,
 			    Boolean.TRUE);
+		    Integer machines = getDepartmentMachines(departmentIds.toArray(new Long[departmentIds.size()]));
 
 		    if (damages != null && !damages.isEmpty()) {
 			damages.stream().forEach((damage) -> {
@@ -412,6 +413,7 @@ public class DamagesController {
 			});
 			response = typedWriter.writeValueAsString(damages);
 			values.put("damages", response);
+			values.put("machines", machines.toString());
 			response = mapper.writeValueAsString(values);
 		    } else {
 			logger.log(Level.INFO, "There weren't damages for the user department id(s):{0}",
