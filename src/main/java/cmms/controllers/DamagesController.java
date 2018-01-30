@@ -318,6 +318,10 @@ public class DamagesController {
 	    List<Damage> damages = getDamageSpecific(CriteriaType.DAMAGE, "created");
 	    Double delayDuration = getDelaySpecific();
 	    ObjectMapper mapper = new ObjectMapper();
+	    Long period = criteria.getTo().getTime() - criteria.getFrom().getTime();
+	    Integer machines = (criteria.getMachines().length != 0) ? criteria.getMachines().length
+		    : (criteria.getDepartments().length != 0) ? getDepartmentMachines(criteria.getDepartments())
+			    : machineDao.findAll().size();
 
 	    if (damages != null && !damages.isEmpty()) {
 		damages.stream().forEach((damage) -> {
@@ -325,15 +329,16 @@ public class DamagesController {
 		});
 		ObjectWriter typedWriter = mapper.writerWithType(
 			mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
-		Long period = criteria.getTo().getTime() - criteria.getFrom().getTime();
-		Integer machines = (criteria.getMachines().length != 0) ? criteria.getMachines().length
-			: (criteria.getDepartments().length != 0) ? getDepartmentMachines(criteria.getDepartments())
-				: machineDao.findAll().size();
 
 		response = typedWriter.writeValueAsString(damages);
 		values.put("damages", response);
 		values.put("period", period.toString());
 		values.put("delayDuration", (delayDuration != null) ? delayDuration.toString() : "0.0");
+		values.put("machines", machines.toString());
+		response = mapper.writeValueAsString(values);
+	    } else {
+		values.put("damages", null);
+		values.put("period", period.toString());
 		values.put("machines", machines.toString());
 		response = mapper.writeValueAsString(values);
 	    }
@@ -479,12 +484,10 @@ public class DamagesController {
 					if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
 					    causeSum = sum;
 					    level1Cause.put(cause, causeSum);
-					} else {
-					    if (level1Cause.containsKey(cause)) {
-						causeSum = level1Cause.get(cause).longValue();
-						causeSum += sum;
-						level1Cause.put(cause, causeSum);
-					    }
+					} else if (level1Cause.containsKey(cause)) {
+					    causeSum = level1Cause.get(cause).longValue();
+					    causeSum += sum;
+					    level1Cause.put(cause, causeSum);
 					}
 					if (criteria.getCauses().length != 0) {
 					    paretos.add(new Pareto(
@@ -520,12 +523,10 @@ public class DamagesController {
 			    if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
 				causeSum = sum;
 				level1Cause.put(cause, causeSum);
-			    } else {
-				if (level1Cause.containsKey(cause)) {
-				    causeSum = level1Cause.get(cause).longValue();
-				    causeSum += sum;
-				    level1Cause.put(cause, causeSum);
-				}
+			    } else if (level1Cause.containsKey(cause)) {
+				causeSum = level1Cause.get(cause).longValue();
+				causeSum += sum;
+				level1Cause.put(cause, causeSum);
 			    }
 			    if (criteria.getCauses().length != 0) {
 				paretos.add(new Pareto(cause.getDescription() + "[" + subcause.getDescription() + "]",
