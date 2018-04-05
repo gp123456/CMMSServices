@@ -79,6 +79,8 @@ public class DamagesController {
 	private static final Integer DAMAGE = 2;
     }
 
+    private static final Long CAUSE_OFFSET = 50000l;
+
     private Date paretoFrom;
 
     private Date paretoTo;
@@ -1249,6 +1251,35 @@ public class DamagesController {
 	return description;
     }
 
+    private Boolean isDelay(Long[] types) {
+	Boolean found = false;
+
+	if (types != null && types.length > 0) {
+	    for (Long type : types) {
+		if (CauseTypeEnum.DELAY.getId().equals(type)) {
+		    found = true;
+		    break;
+		}
+	    }
+	}
+
+	return found;
+    }
+
+    private List<Subcause> getDelays(Long[] causes) {
+	List results = new ArrayList<>();
+
+	if (causes != null && causes.length > 0) {
+	    for (Long cause : causes) {
+		if (cause.compareTo(CAUSE_OFFSET) < 0) {
+		    results.add(new Subcause(cause));
+		}
+	    }
+	}
+
+	return results;
+    }
+
     @SuppressWarnings({ "null", "Unused`Assignment" })
     private List<Damage> getDamageSpecific(Integer criteriaType, String fieldSort) throws Exception {
 	try {
@@ -1284,9 +1315,12 @@ public class DamagesController {
 			    }
 			}
 
-			if (criteria.getCauses() != null && criteria.getSubcauses().length == 0) {
+			if ((criteria.getCauses() != null && criteria.getCauses().length > 0)
+				&& (criteria.getSubcauses() == null || criteria.getSubcauses().length == 0)) {
 			    List<Subcause> subcauses = new ArrayList<>();
 
+			    if (isDelay(criteria.getTypes()))
+				subcauses.addAll(getDelays(criteria.getCauses()));
 			    subcauses.addAll(subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(
 				    Arrays.asList(criteria.getCauses()), Boolean.TRUE));
 
