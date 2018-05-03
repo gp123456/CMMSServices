@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -99,10 +100,7 @@ public class Damage implements Serializable {
     private Boolean deleted;
 
     @Transient
-    private Long minuteDuration;
-
-    @Transient
-    private Long secondsDuration;
+    private BigDecimal minuteDuration;
 
     @Transient
     private String descriptionType;
@@ -361,20 +359,12 @@ public class Damage implements Serializable {
 	this.Q32$STEP = Q32$STEP;
     }
 
-    public Long getMinuteDuration() {
+    public BigDecimal getMinuteDuration() {
 	return minuteDuration;
     }
 
-    public void setMinuteDuration(Long minuteDuration) {
+    public void setMinuteDuration(BigDecimal minuteDuration) {
 	this.minuteDuration = minuteDuration;
-    }
-
-    public Long getSecondsDuration() {
-	return secondsDuration;
-    }
-
-    public void setSecondsDuration(Long secondsDuration) {
-	this.secondsDuration = secondsDuration;
     }
 
     @SuppressWarnings("null")

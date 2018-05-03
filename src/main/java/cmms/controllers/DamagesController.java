@@ -36,6 +36,7 @@ import cmms.models.Pareto;
 import cmms.models.Subcause;
 import cmms.models.User;
 import cmms.models.UserDepartment;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Strings;
@@ -130,7 +131,7 @@ public class DamagesController {
 			    departments.add(ud.getDepartment());
 			});
 
-			Collection<Damage> damages = damageDao
+			List<Damage> damages = damageDao
 				.findByInsertedBetweenAndDepartmentInAndTypeInAndDeletedOrderByCreatedDesc(from,
 					new Date(), departments,
 					(user.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
@@ -146,15 +147,15 @@ public class DamagesController {
 			Integer machines = getDepartmentMachines(departments.toArray(new Long[departments.size()]));
 
 			if (damages != null && !damages.isEmpty()) {
-			    damages.stream().forEach((damage) -> {
-				setDamageInfo(damage);
-			    });
+			    response = setFastDamageInfo(damages);
+			    values.put("counters", response);
 			    response = typedWriter.writeValueAsString(damages);
 			    values.put("damages", response);
 			    values.put("period", period.toString());
-			    values.put("delayDuration", delayDuration.toString());
 			    values.put("machines", machines.toString());
 			    response = mapper.writeValueAsString(values);
+
+			    logger.log(Level.INFO, "Response:{0}", response);
 			} else {
 			    logger.log(Level.INFO, "There weren't damages for the user department(s) id:{0}", id);
 			}
@@ -202,7 +203,7 @@ public class DamagesController {
 		    ObjectWriter typedWriter = mapper.writerWithType(
 			    mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
 
-		    Collection<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
+		    List<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
 			    ? damageDao.findByInsertedBetweenAndMachineAndTypeAndDeletedOrderByCreatedDesc(from,
 				    new Date(), id, CauseTypeEnum.ELECRTICAL.getId(), Boolean.FALSE)
 			    : (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
@@ -214,13 +215,11 @@ public class DamagesController {
 		    Long period = new Date().getTime() - from.getTime();
 
 		    if (damages != null && !damages.isEmpty()) {
-			damages.stream().forEach((Damage damage) -> {
-			    setDamageInfo(damage);
-			});
+			response = setFastDamageInfo(damages);
+			values.put("counters", response);
 			response = typedWriter.writeValueAsString(damages);
 			values.put("damages", response);
 			values.put("period", period.toString());
-			values.put("delayDuration", delayDuration.toString());
 			values.put("machines", "1");
 			response = mapper.writeValueAsString(values);
 		    } else {
@@ -269,7 +268,7 @@ public class DamagesController {
 		    ObjectMapper mapper = new ObjectMapper();
 		    ObjectWriter typedWriter = mapper.writerWithType(
 			    mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
-		    Collection<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
+		    List<Damage> damages = (dbuser.getType().equals(UserTypeEnum.ELECTRICIAN.getId()))
 			    ? damageDao.findByInsertedBetweenAndDepartmentAndTypeAndDeletedOrderByCreatedDesc(from,
 				    new Date(), id, CauseTypeEnum.ELECRTICAL.getId(), Boolean.FALSE)
 			    : (dbuser.getType().equals(UserTypeEnum.ENGINEER.getId()))
@@ -283,13 +282,11 @@ public class DamagesController {
 		    Integer machines = getDepartmentMachines(new Long[] { id });
 
 		    if (damages != null && !damages.isEmpty()) {
-			damages.stream().forEach((Damage damage) -> {
-			    setDamageInfo(damage);
-			});
+			response = setFastDamageInfo(damages);
+			values.put("counters", response);
 			response = typedWriter.writeValueAsString(damages);
 			values.put("damages", response);
 			values.put("period", period.toString());
-			values.put("delayDuration", delayDuration.toString());
 			values.put("machines", machines.toString());
 			response = mapper.writeValueAsString(values);
 		    } else {
@@ -326,19 +323,19 @@ public class DamagesController {
 			    : machineDao.findAll().size();
 
 	    if (damages != null && !damages.isEmpty()) {
-		damages.stream().forEach((damage) -> {
-		    setDamageInfo(damage);
-		});
 		ObjectWriter typedWriter = mapper.writerWithType(
 			mapper.getTypeFactory().constructCollectionType(Collection.class, Damage.class));
 
+		response = setFastDamageInfo(damages);
+		values.put("counters", response);
 		response = typedWriter.writeValueAsString(damages);
 		values.put("damages", response);
 		values.put("period", period.toString());
-		values.put("delayDuration", (delayDuration != null) ? delayDuration.toString() : "0.0");
 		values.put("machines", machines.toString());
 		response = mapper.writeValueAsString(values);
+
 	    } else {
+		values.put("counters", null);
 		values.put("damages", null);
 		values.put("period", period.toString());
 		values.put("machines", machines.toString());
@@ -415,9 +412,7 @@ public class DamagesController {
 		    Integer machines = getDepartmentMachines(departmentIds.toArray(new Long[departmentIds.size()]));
 
 		    if (damages != null && !damages.isEmpty()) {
-			damages.stream().forEach((damage) -> {
-			    setDamageInfo(damage);
-			});
+			setFastDamageInfo(damages);
 			response = typedWriter.writeValueAsString(damages);
 			values.put("damages", response);
 			values.put("machines", machines.toString());
@@ -1193,6 +1188,140 @@ public class DamagesController {
     // ------------------------
     // PRIVATE METHODS
     // ------------------------
+    private String findCauseTypeName(Long id, List<CauseType> types) {
+	for (CauseType type : types) {
+	    if (type.getId().equals(id)) {
+		return type.getViewName();
+	    }
+	}
+
+	return "";
+    }
+
+    private String findDepartmentName(Long id, List<Department> departments) {
+	for (Department department : departments) {
+	    if (department.getId().equals(id)) {
+		return department.getDescription();
+	    }
+	}
+
+	return "";
+    }
+
+    private String findMachineName(Long id, List<Machine> machines) {
+	for (Machine machine : machines) {
+	    if (machine.getId().equals(id)) {
+		return machine.getCode();
+	    }
+	}
+
+	return "";
+    }
+
+    private String findCauseName(Long id, List<Cause> causes, List<Subcause> subcauses) {
+	for (Cause cause : causes) {
+	    if (cause.getId().equals(findSubcauseCause(id, subcauses))) {
+		return cause.getDescription();
+	    }
+	}
+
+	return "";
+    }
+
+    private Long findSubcauseCause(Long id, List<Subcause> subcauses) {
+	for (Subcause subcause : subcauses) {
+	    if (subcause.getId().equals(id)) {
+		return subcause.getCause();
+	    }
+	}
+
+	return 0l;
+    }
+
+    private String findSubcauseName(Long id, List<Subcause> subcauses) {
+	for (Subcause subcause : subcauses) {
+	    if (subcause.getId().equals(id)) {
+		return subcause.getDescription();
+	    }
+	}
+
+	return "";
+    }
+
+    private String findDelayName(Long department, Long id, List<Delay> delays) {
+	for (Delay delay : delays) {
+	    if (delay.getDepartment().equals(department) && delay.getId().equals(id)) {
+		return delay.getDescription();
+	    }
+	}
+
+	return "";
+    }
+
+    private String findUserName(String id, List<User> users) {
+	for (User user : users) {
+	    if (user.getId().equals(id)) {
+		return user.getName();
+	    }
+	}
+
+	return "";
+    }
+
+    @SuppressWarnings("null")
+    private String setFastDamageInfo(List<Damage> damages) throws JsonProcessingException {
+	try {
+	    List<CauseType> types = causeTypeDao.findAll();
+	    List<Department> departments = departmentDao.findAll();
+	    List<Machine> machines = machineDao.findAll();
+	    List<User> users = userDao.findAll();
+	    List<Cause> causes = causeDao.findAll();
+	    List<Subcause> subcauses = subcauseDao.findAll();
+	    List<Delay> delays = delayDao.findAll();
+	    ObjectMapper mapper = new ObjectMapper();
+	    Map<String, String> counters = new HashMap<>();
+	    Long totalDuration = 0l;
+	    Long countMechanical = 0l;
+	    Long countElectrical = 0l;
+	    Long totalDurationCause = 0l;
+	    Long countDelay = 0l;
+
+	    for (Damage damage : damages) {
+		damage.setMinuteDuration(
+			new BigDecimal((damage.getDuration() / 60.) + (damage.getDuration() % 60.) / 60.));
+		damage.setDescriptionType(findCauseTypeName(damage.getType(), types));
+		damage.setDescriptionDepartment(findDepartmentName(damage.getDepartment(), departments));
+		damage.setDescriptionMachine(findMachineName(damage.getMachine(), machines));
+		damage.setDescriptionCause(!damage.getType().equals(CauseTypeEnum.DELAY.getId())
+			? findCauseName(damage.getCause(), causes, subcauses)
+			: findDelayName(damage.getDepartment(), damage.getCause(), delays));
+		damage.setDescriptionSubcause(findSubcauseName(damage.getCause(), subcauses));
+		damage.setDescriptionUser(findUserName(damage.getUser(), users));
+		totalDuration += damage.getDuration();
+		if (damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
+		    countDelay++;
+		} else if (damage.getType().equals(CauseTypeEnum.MECHANICAL.getId())) {
+		    countMechanical++;
+		    totalDurationCause += damage.getDuration();
+		} else if (damage.getType().equals(CauseTypeEnum.ELECRTICAL.getId())) {
+		    countElectrical++;
+		    totalDurationCause += damage.getDuration();
+		}
+		counters.put("totalDuration", totalDuration.toString());
+		counters.put("countMechanical", countMechanical.toString());
+		counters.put("countElectrical", countElectrical.toString());
+		counters.put("totalDurationCause", totalDurationCause.toString());
+		counters.put("countDelay", countDelay.toString());
+	    }
+
+	    return mapper.writeValueAsString(counters);
+	} catch (Exception ex) {
+	    logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+	}
+
+	return null;
+    }
+
     private void setDamageInfo(Damage damage) {
 	CauseType ct = causeTypeDao.findOne(damage.getType());
 	Department d = departmentDao.findOne(damage.getDepartment());
@@ -1200,13 +1329,9 @@ public class DamagesController {
 	User u = userDao.findOne(damage.getUser());
 	String cause = getCauseDescription(damage.getType(), damage.getCause(), damage.getDepartment());
 	String subcause = getSubcauseDescription(damage.getType(), damage.getCause());
-	// double fDuration = damage.getDuration() / 60.;
-	Long lDuration = damage.getDuration() / 60;
-	// double diff = fDuration - lDuration;
 
-	// damage.setMinuteDuration(diff < 0.5 ? lDuration : lDuration + 1);
-	damage.setMinuteDuration(lDuration);
-	damage.setSecondsDuration(damage.getDuration() % 60);
+	damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60) + (damage.getDuration() % 60) / 60));
+	damage.setMinuteDuration(damage.getMinuteDuration().setScale(1, RoundingMode.HALF_UP));
 	damage.setDescriptionType((ct != null) ? ct.getViewName() : "");
 	damage.setDescriptionDepartment((d != null) ? d.getDescription() : "");
 	damage.setDescriptionMachine((m != null) ? m.getCode() : "");
@@ -1319,8 +1444,9 @@ public class DamagesController {
 				&& (criteria.getSubcauses() == null || criteria.getSubcauses().length == 0)) {
 			    List<Subcause> subcauses = new ArrayList<>();
 
-			    if (isDelay(criteria.getTypes()))
+			    if (isDelay(criteria.getTypes())) {
 				subcauses.addAll(getDelays(criteria.getCauses()));
+			    }
 			    subcauses.addAll(subcauseDao.findByCauseInAndEnableOrderByDescriptionAsc(
 				    Arrays.asList(criteria.getCauses()), Boolean.TRUE));
 
