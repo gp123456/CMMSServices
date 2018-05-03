@@ -452,6 +452,10 @@ public class DamagesController {
 	    List<Damage> damages = getDamageSpecific(CriteriaType.PARETO, "cause");
 
 	    if (damages != null && !damages.isEmpty()) {
+                damages.stream().forEach((damage) -> {
+                    setDamageInfo(damage);
+		});
+               
 		Integer machines = (criteria.getMachines().length != 0) ? criteria.getMachines().length
 			: (criteria.getDepartments().length != 0) ? getDepartmentMachines(criteria.getDepartments())
 				: machineDao.findAll().size();
@@ -460,91 +464,87 @@ public class DamagesController {
 		Double totalDuration = getTotalDuration(damages);
 		Double totalDurationCause = getTotalDurationCause(damages);
 		ObjectMapper mapper = new ObjectMapper();
-		Map<Cause, Long> level1Cause = new HashMap<>();
 		List<Pareto> paretos = new ArrayList<>();
 		Long countCause = getCountCause(damages);
-		Long causeId = 0l, departmentId = 0l, typeId = 0l, sum = 0l, causeSum = 0l;
+		Long causeId = 0l, typeId = 0l, sum = 0l;
+                Double causeSum = 0.0;
+                String cause = null, subcause = null;
 
 		Collections.sort(damages, (a, b) -> b.getCause().compareTo(a.getCause()));
 
 		for (Damage damage : damages) {
-		    if (!causeId.equals(damage.getCause())) {
-			if (!causeId.equals(0l)) {
-			    if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
-				Delay delay = delayDao.findByIdAndDepartment(causeId, departmentId);
-
-				if (delay != null) {
-				    paretos.add(new Pareto(delay.getDescription(), sum));
-				}
-			    } else {
-				Subcause subcause = subcauseDao.findOne(causeId);
-
-				if (subcause != null) {
-				    if (subcause.getCause() != null) {
-					Cause cause = causeDao.findOne(subcause.getCause());
-
-					if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
-					    causeSum = sum;
-					    level1Cause.put(cause, causeSum);
-					} else if (level1Cause.containsKey(cause)) {
-					    causeSum = level1Cause.get(cause).longValue();
-					    causeSum += sum;
-					    level1Cause.put(cause, causeSum);
-					}
-					if (criteria.getCauses().length != 0) {
-					    paretos.add(new Pareto(
-						    cause.getDescription() + "[" + subcause.getDescription() + "]",
-						    sum));
-					}
-				    } else {
-					paretos.add(new Pareto(subcause.getDescription(), sum));
-				    }
-				}
-			    }
-			}
-			causeId = damage.getCause();
-			departmentId = damage.getDepartment();
-			typeId = damage.getType();
-			sum = damage.getDuration();
-		    } else {
-			sum += damage.getDuration();
-		    }
-		}
-		if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
-		    Delay delay = delayDao.findByIdAndDepartment(causeId, departmentId);
-		    if (delay != null) {
-			paretos.add(new Pareto(delay.getDescription(), sum));
-		    }
-		} else {
-		    Subcause subcause = subcauseDao.findOne(causeId);
-
-		    if (subcause != null) {
-			if (subcause.getCause() != null) {
-			    Cause cause = causeDao.findOne(subcause.getCause());
-
-			    if (level1Cause.isEmpty() || !level1Cause.containsKey(cause)) {
-				causeSum = sum;
-				level1Cause.put(cause, causeSum);
-			    } else if (level1Cause.containsKey(cause)) {
-				causeSum = level1Cause.get(cause).longValue();
-				causeSum += sum;
-				level1Cause.put(cause, causeSum);
-			    }
-			    if (criteria.getCauses().length != 0) {
-				paretos.add(new Pareto(cause.getDescription() + "[" + subcause.getDescription() + "]",
-					sum));
-			    }
-			} else {
-			    paretos.add(new Pareto(subcause.getDescription(), sum));
-			}
-		    }
-		}
-
-		if (criteria.getCauses().length == 0) {
-		    for (Map.Entry<Cause, Long> entry : level1Cause.entrySet()) {
-			paretos.add(new Pareto(entry.getKey().getDescription(), entry.getValue()));
-		    }
-		}
+                    if (!causeId.equals(damage.getCause())) {
+                        if (!causeId.equals(0l)) {
+                            if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
+                                if (cause != null && !cause.trim().isEmpty()) {
+                                    paretos.add(new Pareto(cause, sum));
+                                }
+                            } else {
+                                if (criteria.getCauses().length != 0) {
+                                    if (subcause != null && !subcause.trim().isEmpty()) {
+                                        if (cause != null && !cause.trim().isEmpty()) {
+                                            paretos.add(new Pareto(cause + "[" + subcause + "]", sum));
+                                        } else {
+                                            paretos.add(new Pareto(subcause, sum));
+                                        }
+                                    }
+                                } else {
+                                    if (cause != null && !cause.trim().isEmpty()) {
+                                        if (!paretos.isEmpty() && containsCause(paretos, cause) == true) {
+                                            for (Pareto pareto : paretos) {
+                                                if (pareto.getLabel().equals(cause)) {
+                                                    causeSum = pareto.getDelay();
+                                                    causeSum += new BigDecimal(sum / 3600.00).doubleValue();
+                                                    pareto.setDelay(new BigDecimal(causeSum).setScale(2, RoundingMode.CEILING).doubleValue());
+                                                    break;
+                                                }
+                                            }
+                                        } else {
+                                            paretos.add(new Pareto(cause, sum));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        causeId = damage.getCause();
+                        cause = damage.getDescriptionCause();
+                        subcause = damage.getDescriptionSubcause();
+                        typeId = damage.getType();
+                        sum = damage.getDuration();
+                    } else {
+                        sum += damage.getDuration();
+                    }
+                }
+                if (typeId.equals(CauseTypeEnum.DELAY.getId())) {
+                    if (cause != null && !cause.trim().isEmpty()) {
+                        paretos.add(new Pareto(cause, sum));
+                    }
+                } else {
+                    if (criteria.getCauses().length != 0) {
+                        if (subcause != null && !subcause.trim().isEmpty()) {
+                            if (cause != null && !cause.trim().isEmpty()) {
+                                paretos.add(new Pareto(cause + "[" + subcause + "]", sum));
+                            } else {
+                                paretos.add(new Pareto(subcause, sum));
+                            }
+                        }
+                    } else {
+                        if (cause != null && !cause.trim().isEmpty()) {
+                            if (!paretos.isEmpty() && containsCause(paretos, cause) == true) {
+                                for (Pareto pareto : paretos) {
+                                    if (pareto.getLabel().equals(cause)) {
+                                        causeSum = pareto.getDelay();
+                                        causeSum += new BigDecimal(sum / 3600.00).doubleValue();
+                                        pareto.setDelay(new BigDecimal(causeSum).setScale(2, RoundingMode.CEILING).doubleValue());
+                                        break;
+                                    }
+                                }
+                            } else {
+                                paretos.add(new Pareto(cause, sum));
+                            }
+                        }
+                    }
+                }
 
 		Collections.sort(paretos, (a, b) -> b.getDelay().compareTo(a.getDelay()));
 
@@ -1193,6 +1193,9 @@ public class DamagesController {
     // ------------------------
     // PRIVATE METHODS
     // ------------------------
+    private boolean containsCause(final List<Pareto> paretos, final String cause){
+        return paretos.stream().filter(pareto -> pareto.getLabel().equals(cause)).findFirst().isPresent();
+    }
     private void setDamageInfo(Damage damage) {
 	CauseType ct = causeTypeDao.findOne(damage.getType());
 	Department d = departmentDao.findOne(damage.getDepartment());
