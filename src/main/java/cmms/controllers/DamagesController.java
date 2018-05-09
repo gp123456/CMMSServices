@@ -59,6 +59,8 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.stereotype.Controller;
@@ -409,7 +411,8 @@ public class DamagesController {
                     Integer machines = getDepartmentMachines(departmentIds.toArray(new Long[departmentIds.size()]));
 
                     if (damages != null && !damages.isEmpty()) {
-                        setFastDamageInfo(damages);
+                        response = setFastDamageInfo(damages);
+                        values.put("counters", response);
                         response = typedWriter.writeValueAsString(damages);
                         values.put("damages", response);
                         values.put("machines", machines.toString());
@@ -1245,12 +1248,18 @@ public class DamagesController {
         return "";
     }
 
-    private String findDelayName(Long department, Long id, List<Delay> delays) {
-        for (Delay delay : delays) {
-            if (delay.getDepartment().equals(department) && delay.getId().equals(id)) {
-                return delay.getDescription();
+    private String findDelayName(Long department, Long id, Map<Long, List<Delay>> delays) {
+        List<Delay> _delays = delays.get(department);
+
+        if (_delays != null) {
+            for (Delay delay : _delays) {
+                if (delay.getId().equals(id)) {
+                    return delay.getDescription();
+                }
             }
         }
+
+        logger.log(Level.INFO, "findDelayName - {0},{1}", new Object[]{department, id});
 
         return "";
     }
@@ -1265,6 +1274,24 @@ public class DamagesController {
         return "";
     }
 
+    private Map<Long, List<Delay>> getDelaysDepartment() {
+        Map<Long, List<Delay>> delays = new HashMap<>();
+
+        try {
+            List<Long> departments = delayDao.findAllDepartments();
+
+            if (departments != null && !departments.isEmpty()) {
+                for (Long depatment : departments) {
+                    delays.put(depatment, delayDao.findByDepartment(depatment));
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "{0}", ex.getStackTrace());
+        }
+
+        return delays;
+    }
+
     @SuppressWarnings("null")
     private String setFastDamageInfo(List<Damage> damages) throws JsonProcessingException {
         try {
@@ -1274,7 +1301,7 @@ public class DamagesController {
             List<User> users = userDao.findAll();
             List<Cause> causes = causeDao.findAll();
             List<Subcause> subcauses = subcauseDao.findAll();
-            List<Delay> delays = delayDao.findAll();
+            Map<Long, List<Delay>> delays = getDelaysDepartment();
             ObjectMapper mapper = new ObjectMapper();
             Map<String, String> counters = new HashMap<>();
             Long totalDuration = 0l;
@@ -1284,15 +1311,16 @@ public class DamagesController {
             Long countDelay = 0l;
 
             for (Damage damage : damages) {
-                damage.setMinuteDuration(
-                        new BigDecimal((damage.getDuration() / 60.) + (damage.getDuration() % 60.) / 60.));
+                damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60.) + (damage.getDuration() % 60.) / 60.));
                 damage.setDescriptionType(findCauseTypeName(damage.getType(), types));
                 damage.setDescriptionDepartment(findDepartmentName(damage.getDepartment(), departments));
                 damage.setDescriptionMachine(findMachineName(damage.getMachine(), machines));
                 damage.setDescriptionCause(!damage.getType().equals(CauseTypeEnum.DELAY.getId())
                         ? findCauseName(damage.getCause(), causes, subcauses)
                         : findDelayName(damage.getDepartment(), damage.getCause(), delays));
-                damage.setDescriptionSubcause(findSubcauseName(damage.getCause(), subcauses));
+                damage.setDescriptionSubcause(!damage.getType().equals(CauseTypeEnum.DELAY.getId())
+                        ? findSubcauseName(damage.getCause(), subcauses)
+                        : "");
                 damage.setDescriptionUser(findUserName(damage.getUser(), users));
                 totalDuration += damage.getDuration();
                 if (damage.getType().equals(CauseTypeEnum.DELAY.getId())) {
@@ -1304,12 +1332,16 @@ public class DamagesController {
                     countElectrical++;
                     totalDurationCause += damage.getDuration();
                 }
-                counters.put("totalDuration", totalDuration.toString());
-                counters.put("countMechanical", countMechanical.toString());
-                counters.put("countElectrical", countElectrical.toString());
-                counters.put("totalDurationCause", totalDurationCause.toString());
-                counters.put("countDelay", countDelay.toString());
             }
+
+            counters.put("totalDuration", totalDuration.toString());
+            counters.put("countMechanical", countMechanical.toString());
+            counters.put("countElectrical", countElectrical.toString());
+            counters.put("totalDurationCause", totalDurationCause.toString());
+            counters.put("countDelay", countDelay.toString());
+
+            logger.log(Level.INFO, "Counters - {0}-{1}-{2}-{3}-{4}", new Object[]{totalDuration, countMechanical, countElectrical, totalDurationCause,
+                countDelay});
 
             return mapper.writeValueAsString(counters);
         } catch (Exception ex) {
