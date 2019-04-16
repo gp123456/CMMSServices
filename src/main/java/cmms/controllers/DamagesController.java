@@ -1311,7 +1311,8 @@ public class DamagesController {
             Long countDelay = 0l;
 
             for (Damage damage : damages) {
-                damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60.) + (damage.getDuration() % 60.) / 60.));
+                damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60) + (damage.getDuration() % 60) / 60.));
+                damage.setMinuteDuration(damage.getMinuteDuration().setScale(2, RoundingMode.HALF_UP));
                 damage.setDescriptionType(findCauseTypeName(damage.getType(), types));
                 damage.setDescriptionDepartment(findDepartmentName(damage.getDepartment(), departments));
                 damage.setDescriptionMachine(findMachineName(damage.getMachine(), machines));
@@ -1359,8 +1360,8 @@ public class DamagesController {
         String cause = getCauseDescription(damage.getType(), damage.getCause(), damage.getDepartment());
         String subcause = getSubcauseDescription(damage.getType(), damage.getCause());
 
-        damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60) + (damage.getDuration() % 60) / 60));
-        damage.setMinuteDuration(damage.getMinuteDuration().setScale(1, RoundingMode.HALF_UP));
+        damage.setMinuteDuration(new BigDecimal((damage.getDuration() / 60) + (damage.getDuration() % 60) / 60.));
+        damage.setMinuteDuration(damage.getMinuteDuration().setScale(2, RoundingMode.HALF_UP));
         damage.setDescriptionType((ct != null) ? ct.getViewName() : "");
         damage.setDescriptionDepartment((d != null) ? d.getDescription() : "");
         damage.setDescriptionMachine((m != null) ? m.getCode() : "");
